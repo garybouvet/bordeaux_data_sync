@@ -3,22 +3,20 @@
 #                      Imports                        #
 #-----------------------------------------------------#
 
-import streamlit as st
-import pandas as pd
-from PIL import Image
-import folium
-from streamlit_folium import folium_static
-import geopandas as gpd
-from babel.dates import format_date
-from streamlit_option_menu import option_menu  
-from folium.plugins import Draw
-import random
-from dotenv import load_dotenv
-import os
- 
-
-# from folium.plugins import MarkerCluster                       # Sera utilisé plus tard pour les stations
-
+import streamlit as st                                  # Neccessaire pour utilier Streamlit
+import pandas as pd                                     # Manipulation des bases de données
+from PIL import Image                                   # Affichage des 2 logos
+import folium                                           # Afficher le choix de carte Folium
+from streamlit_folium import folium_static              # Style de carte (static)
+import geopandas as gpd                                 # Traiter les données Géospatial
+from babel.dates import format_date                     # Formater les dates
+from streamlit_option_menu import option_menu           # Affichage du style des boutons dans la barre latéral
+from folium.plugins import Draw                         # Widgets draw (dessin) sur carte en page Bus • Tram • BatCub
+import random                                           # Affichage aléatoire des funfacts pendant le temps de chargement de carte 
+from dotenv import load_dotenv                          # Masquer l'API utilisé
+import os                                               # Appeler l'API securisé
+import streamlit.components.v1 as components            # Utiliser pour le scroll up automatique (utilisé dans fonction)
+# from folium.plugins import MarkerCluster              # Sera utilisé plus tard pour les stations
 
 #-----------------------------------------------------#
 #                   Page Configuration                #
@@ -49,7 +47,7 @@ logo = Image.open(logo_path)
 #                     Functions                       #
 #-----------------------------------------------------#
 
-# Fonction pour charger les fun facts à partir du fichier à partir du fichier text (Temps d'attente / U.X)
+# Fonction pour charger les fun facts à partir du fichier .txt (Temps d'attente / U.X)
 def load_facts(file_path):
     try:
         with open(file_path, 'r', encoding='utf-8') as file:
@@ -58,15 +56,6 @@ def load_facts(file_path):
     except FileNotFoundError:
         st.error("Fait amusant non disponible...")
         return []
-
-# Convertire les MultiLineString en LineString
-def convert_to_linestring(multilinestring):
-    """Convert MultiLineString to LineString"""
-    # Checking the geometry type and converting if it's a MultiLineString
-    if multilinestring.geom_type == 'LineString':
-        return multilinestring
-    elif multilinestring.geom_type == 'MultiLineString':
-        return multilinestring.geoms[0]
 
 # Chargement des données Bus, Tram et BatCub depuis le fichier GeoJSON
 @st.cache_data(show_spinner=False)
@@ -152,8 +141,8 @@ def create_v3_map(filtered_data, selected_tile):
 
     return m  # Returning the map object
 
-# Fonctions utilitaires
-def render_page_description():
+# Fonctions pour la description de la page 3
+def render_page_3_description():
     return """
         <div style="text-align: justify; background-color: #f5f5f5; padding: 20px; border-radius: 10px; border: 2px solid #000;">
             <h2 style="text-align: center;">Bus • Tram • BatCub</h2>
@@ -163,7 +152,7 @@ def render_page_description():
                 De plus, vous pouvez desactiver / activer la visualisation des lignes en retard, qui apparaissent en rouge pour une identification rapide.</p>
         </div>
     """
-
+# Pour créer les lignes et leur couleur en fonction du vehicule
 def add_geojson_to_layer(row, layer, line_color, line_weight):
     geojson_obj = folium.GeoJson(
         row['geometry'], 
@@ -172,6 +161,7 @@ def add_geojson_to_layer(row, layer, line_color, line_weight):
     )
     geojson_obj.add_to(layer)
 
+# Pour la page Bus Tram BatCub
 def create_popup_text(row, line_emoji, line_color):
     retard_moyen_minutes = row['retard'] / 60
     return f"""
@@ -184,7 +174,7 @@ def create_popup_text(row, line_emoji, line_color):
         <p style="margin-bottom:5px"><b>Nombre de véhicule/ligne:</b> {row['nb_vehicule']}</p>
     </div>
     """
-
+# Titre de presentation Rapport d'analyse VCub
 def render_powerbi_info():
     return """
     <div style="margin-top: 20px; text-align: center; background-color: #f5f5f5; padding: 20px; border-radius: 10px; border: 2px solid #000;">
@@ -192,21 +182,7 @@ def render_powerbi_info():
         <p>Pour visualiser ce rapport, veuillez vous connecter à un compte Power BI</p>
     </div>
     """
-
-def render_powerbi_iframe():
-    return """
-    <div style="width: 1000px; height: 1200px; overflow: hidden; position: relative;">
-        <iframe 
-            title="TRAM • BUS • BATEAU" 
-            width="945" 
-            height="2000" 
-            src="https://app.powerbi.com/reportEmbed?reportId=7f601950-66d2-4060-840b-21740784a6dc&autoAuth=true&ctid=5892e2db-e39d-4cc1-a179-dc66550efc30" 
-            frameborder="0" 
-            allowfullscreen
-            style="position: absolute;">
-        </iframe>
-    </div>
-    """
+# Affichage du rapport VCub
 def render_powerbi_report_vcub():
     return """
     <div style="width: 1000px; height: 650px; overflow: hidden; position: relative;">
@@ -222,6 +198,43 @@ def render_powerbi_report_vcub():
     </div>
     """
 
+# Titre de presentation Rapport d'analyse Bus • Tram • BatCub
+def render_powerbi_info_2():
+    return """
+    <div style="margin-top: 20px; text-align: center; background-color: #f5f5f5; padding: 20px; border-radius: 10px; border: 2px solid #000;">
+        <h2>Rapport d'analyse Bus • Tram • BatCub</h2>
+        <p>Pour visualiser ce rapport, veuillez vous connecter à un compte Power BI</p>
+    </div>
+    """
+
+# Affichage du raport Bus • Tram • BatCub
+def render_powerbi_iframe():
+    return """
+    <div style="width: 1000px; height: 1200px; overflow: hidden; position: relative;">
+        <iframe 
+            title="TRAM • BUS • BATEAU" 
+            width="945" 
+            height="2000" 
+            src="https://app.powerbi.com/reportEmbed?reportId=7f601950-66d2-4060-840b-21740784a6dc&autoAuth=true&ctid=5892e2db-e39d-4cc1-a179-dc66550efc30" 
+            frameborder="0" 
+            allowfullscreen
+            style="position: absolute;">
+        </iframe>
+    </div>
+    """
+
+# Fonction pour remonter en haut de page (Applicable sur une seul page malheureusement)
+def scroll_to_top():
+    components.html(
+        """
+        <script>
+        const anchor = document.createElement('a');
+        anchor.setAttribute('href', '#');
+        anchor.click();
+        </script>
+        """,
+        height=0
+    )
 #-----------------------------------------------------#
 #                       Sidebar                       #
 #-----------------------------------------------------#
@@ -232,7 +245,7 @@ with st.sidebar:
     selected = option_menu(None, ['HOME', 'VCub', 'Bus • Tram • BatCub'],
                            icons=['house', 'bicycle', 'geo-alt'], 
                            menu_icon="cast", default_index=0)
-
+   
 #-----------------------------------------------------#
 #                    Pages HOME                       #
 #-----------------------------------------------------#
@@ -282,8 +295,6 @@ elif selected == 'VCub':
     # Ajout d'un espace 
     st.markdown("""<div style="margin-bottom: 20px;"></div>""", unsafe_allow_html=True)
 
-    data = load_v3_data()
-
     # Présentation de la deuxième démonstration
     st.markdown("""
     <div style="text-align: justify; background-color: #f5f5f5; padding: 20px; border-radius: 10px; border: 2px solid #000;">
@@ -298,59 +309,69 @@ elif selected == 'VCub':
     # Ajout d'un espace 
     st.markdown("""<div style="margin-bottom: 20px;"></div>""", unsafe_allow_html=True)
 
-    # Formatage des dates présentes
-    date_format_mapping = pd.Series(data.formatted_date.values,index=data.mdate.dt.date).to_dict()
+    # Témoin de chargement
+    with st.spinner('Chargement de la carte ...'):
 
-    # Rangement dans l'ordre des dates formaté unique 
-    unique_dates = sorted(date_format_mapping.items())[1:]
+        # Chargement des données VCub
+        data = load_v3_data()
+        # Ajout d'un espace 
+        st.markdown("""<div style="margin-bottom: 20px;"></div>""", unsafe_allow_html=True)
 
-    # Liste déroulante pour des dates formaté
-    selected_date = st.selectbox('Selectionnez une date :', 
-                                 unique_dates, format_func=lambda x: x[1] if x != 'Selectionnez une date..' else x)
+        # Formatage des dates présentes
+        date_format_mapping = pd.Series(data.formatted_date.values,index=data.mdate.dt.date).to_dict()
+
+        # Rangement dans l'ordre des dates formaté unique 
+        unique_dates = sorted(date_format_mapping.items())[1:]
+
+        # Liste déroulante pour des dates formaté
+        selected_date = st.selectbox('Selectionnez une date :', 
+                                     unique_dates, format_func=lambda x: x[1] if x != 'Selectionnez une date..' else x)
+
+        # Rangement dans l'ordre des heures 
+        unique_times = sorted(data['time'].unique())
+
+        # Liste déroulante des heures uniques
+        selected_time = st.selectbox('Selectionnez une heure :', options=unique_times)
+
+        # Ajout d'un espace
+        st.markdown("""<div style="margin-bottom: 20px;"></div>""", unsafe_allow_html=True)
+
+        # Application de la carte jour ou nuit en fonction du lévé et coucher du soleil (Période réel)
+        if '06:20' <= selected_time < '21:40':
+            selected_tile = new_tile
+        else:
+            selected_tile = 'CartoDB dark_matter'
+
+        # Filtrage des données en fonction de la date et de l'heure sélectionnées et création d'une carte
+        filtered_data = (
+            data[(data['mdate'].dt.date == selected_date[0]) & (data['time'] == selected_time)] 
+            if selected_date != 'Selectionnez une date..' else pd.DataFrame()
+        )
+
+        # Création de la carte interactive VCub
+        m = create_v3_map(filtered_data, selected_tile)
+
+        # Affichage de la carte interactive VCub
+        folium_static(m, width=945, height=450)
+
+        # Ligne de séparation de sujet
+        st.markdown("---")
+
+    #------------- Tableau de bord Power BI --------------#
+
+        st.markdown(render_powerbi_info(), unsafe_allow_html=True)               # Texte d'information pour visualiser le rapport 
+        st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True) # Ajout d'un espace
+        st.markdown(render_powerbi_report_vcub(), unsafe_allow_html=True)        # Affichage du rapport d'analyse VCub
     
-    # Rangement dans l'ordre des heures 
-    unique_times = sorted(data['time'].unique())
-
-    # Liste déroulante des heures uniques
-    selected_time = st.selectbox('Selectionnez une heure :', options=unique_times)
-
-    # Ajout d'un espace
-    st.markdown("""<div style="margin-bottom: 20px;"></div>""", unsafe_allow_html=True)
-
-    # Application de la carte jour ou nuit en fonction du lévé et coucher du soleil (Période réel)
-    if '06:20' <= selected_time < '21:40':
-        selected_tile = new_tile
-    else:
-        selected_tile = 'CartoDB dark_matter'
-
-    # Filtrage des données en fonction de la date et de l'heure sélectionnées et création d'une carte
-    filtered_data = (
-        data[(data['mdate'].dt.date == selected_date[0]) & (data['time'] == selected_time)] 
-        if selected_date != 'Selectionnez une date..' else pd.DataFrame()
-    )
-
-    # Création de la carte interactive VCub
-    m = create_v3_map(filtered_data, selected_tile)
-
-    # Affichagevde la carte interactive VCub
-    folium_static(m, width=945, height=450)
-
-    # Ligne de séparation de sujet
-    st.markdown("---")
-
-#------------- Tableau de bord Power BI --------------#
-
-    st.markdown(render_powerbi_info(), unsafe_allow_html=True)               # Texte d'information pour visualiser le rapport 
-    st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True) # Ajout d'un espace
-    st.markdown(render_powerbi_report_vcub(), unsafe_allow_html=True)        # Affichage du rapport d'analyse VCub
-
 #-----------------------------------------------------#
 #              Pages Bus • Tram • VCub                #
 #-----------------------------------------------------#
 
 # Début de la page "Bus • Tram • BatCub"
 elif selected == 'Bus • Tram • BatCub':
-    st.markdown(render_page_description(), unsafe_allow_html=True)
+    scroll_to_top()
+
+    st.markdown(render_page_3_description(), unsafe_allow_html=True)
 
     # Espace pour la mise en page
     st.markdown("""<div style="height: 20px;"></div>""", unsafe_allow_html=True)
@@ -480,7 +501,7 @@ elif selected == 'Bus • Tram • BatCub':
 
     #------------- Tableau de bord Power BI --------------#
 
-    st.markdown(render_powerbi_info(), unsafe_allow_html=True)                 # Texte d'information pour visualiser le rapport              
+    st.markdown(render_powerbi_info_2(), unsafe_allow_html=True)               # Texte d'information pour visualiser le rapport              
     st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)   # Ajout d'un espace
     st.markdown(render_powerbi_iframe(), unsafe_allow_html=True)               # Affichage du rapport d'analyse VCub
 
